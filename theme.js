@@ -12,7 +12,6 @@
       { selector: ".niJOWstqVyfckHcXQxP1 .cSZJwcwYgJfwduUmXOOV", options: { borderRadius: 20 } },
       { selector: ".main-nowPlayingView-trackInfo", options: { borderRadius: 20 } },
       { selector: ".main-nowPlayingView-section", options: { borderRadius: 20 } },
-      { selector: ".main-entityHeader-container.gmKBgPCnX785KDicbdJu", options: { borderRadius: 20 } },
       { selector: ".main-home-filterChipsSection", options: { borderRadius: 20 } },
       { selector: ".view-homeShortcutsGrid-shortcut", options: { borderRadius: 20 } },
       { selector: ".main-card-card", options: { borderRadius: 20 } },
@@ -383,80 +382,35 @@
     }
 
     async function updateBackground() {
-      let mode = localStorage.getItem("liquify-bg-mode") || "dynamic";
-      let customImage = localStorage.getItem("liquify-bg-image");
-      let bgUrl = localStorage.getItem("liquify-bg-url");
-      let albumArt = getAlbumArt();
+      const constantBg = "https://raw.githubusercontent.com/LoTitlaManku/Spicetify-Rimu-Theme/main/background.png";
 
-      if (
-        !(mode !== lastMode || customImage !== lastImage || bgUrl !== lastBgUrl) &&
-        !(albumArt !== lastAlbumArt)
-      ) {
+      // If the background is already set, only update the accent color
+      if (lastBgUrl === constantBg) {
+        let albumArt = getAlbumArt();
+        if (albumArt && albumArt !== lastAlbumArt) {
+          lastAlbumArt = albumArt;
+          let avg = await getAverageColor(albumArt);
+          let boosted = boostColor(avg, 1.7, 1.1);
+          document.documentElement.style.setProperty("--accent-color", boosted);
+        }
         return;
       }
 
-      lastMode = mode;
-      lastImage = customImage;
-      lastBgUrl = bgUrl;
-      lastAlbumArt = albumArt;
+      // Initial setup: apply the constant image to Layer A
+      lastBgUrl = constantBg;
+      layerA.style.backgroundImage = `url("${constantBg}")`;
+      layerA.classList.add("active");
 
-      let src;
+      // Disable other layers and animated modes
+      layerB.classList.remove("active");
+      animatedBg.classList.remove("active");
+      tilesA.forEach((t) => t.classList.remove("active"));
+      tilesB.forEach((t) => t.classList.remove("active"));
 
-      if (mode === "url" && bgUrl) {
-        src = bgUrl;
-        layerA.style.backgroundImage = `url("${src}")`;
-        layerB.style.backgroundImage = `url("${src}")`;
-        layerA.classList.add("active");
-        layerB.classList.remove("active");
-        animatedBg.classList.remove("active");
-        tilesA.forEach((t) => t.classList.remove("active"));
-        tilesB.forEach((t) => t.classList.remove("active"));
-      } else if (mode === "custom" && customImage) {
-        src = customImage;
-        layerA.style.backgroundImage = `url("${src}")`;
-        layerB.style.backgroundImage = `url("${src}")`;
-        layerA.classList.add("active");
-        layerB.classList.remove("active");
-        animatedBg.classList.remove("active");
-        tilesA.forEach((t) => t.classList.remove("active"));
-        tilesB.forEach((t) => t.classList.remove("active"));
-      } else if (mode === "animated" && albumArt) {
-        layerA.classList.remove("active");
-        layerB.classList.remove("active");
-        animatedBg.classList.add("active");
-        if (animFlip) {
-          tilesA.forEach((t) => {
-            t.style.backgroundImage = `url("${albumArt}")`;
-            t.classList.add("active");
-          });
-          tilesB.forEach((t) => t.classList.remove("active"));
-        } else {
-          tilesB.forEach((t) => {
-            t.style.backgroundImage = `url("${albumArt}")`;
-            t.classList.add("active");
-          });
-          tilesA.forEach((t) => t.classList.remove("active"));
-        }
-        animFlip = !animFlip;
-      } else if (albumArt) {
-        // dynamic mode
-        src = albumArt;
-        animatedBg.classList.remove("active");
-        tilesA.forEach((t) => t.classList.remove("active"));
-        tilesB.forEach((t) => t.classList.remove("active"));
-        if (dynamicFlip) {
-          layerA.style.backgroundImage = `url("${src}")`;
-          layerA.classList.add("active");
-          layerB.classList.remove("active");
-        } else {
-          layerB.style.backgroundImage = `url("${src}")`;
-          layerB.classList.add("active");
-          layerA.classList.remove("active");
-        }
-        dynamicFlip = !dynamicFlip;
-      }
-
+      // Set initial accent color based on current song
+      let albumArt = getAlbumArt();
       if (albumArt) {
+        lastAlbumArt = albumArt;
         let avg = await getAverageColor(albumArt);
         let boosted = boostColor(avg, 1.7, 1.1);
         document.documentElement.style.setProperty("--accent-color", boosted);
@@ -466,7 +420,6 @@
     updateBackground();
     Spicetify.Player.addEventListener("songchange", updateBackground);
     window.addEventListener("liquifyBackgroundChange", updateBackground);
-    setInterval(updateBackground, 500);
   })();
 
   // ==================== Popup Bounce ====================

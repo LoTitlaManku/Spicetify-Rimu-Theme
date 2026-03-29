@@ -71,7 +71,7 @@
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
-  filter: blur(var(--liquify-bg-blur, 7px)) brightness(var(--liquify-bg-brightness, 45%));
+  filter: blur(var(--liquify-bg-blur, 4px)) brightness(var(--liquify-bg-brightness, 45%));
   opacity: 0;
   transition: opacity 0.6s ease;
 }
@@ -3131,4 +3131,12 @@ span.e-91000-text.encore-text-headline-large.encore-internal-color-text-base {
 
 .x-progressBar-fillColor {
   visibility: visible;
+}
+
+
+/* CUSTOM RIMU OVERRIDES */
+
+/* Remove the banner ad container */
+div:has(> div[data-testid="test-ref-div"]) {
+  display: none !important;
 }
